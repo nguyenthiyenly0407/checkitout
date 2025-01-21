@@ -1,31 +1,50 @@
 import React, { useState, useEffect } from "react";
-import { auth, provider } from "./firebase";
+import { auth, provider, signInWithPopup } from "./firebase";
+import { sendLoginNotification } from "./firebaseFunctions";
 import FormPage from "./Formpage";
-import { sendLoginNotification } from './firebaseFunctions'; // Đảm bảo rằng tên tệp là firebaseFunctions.jsx
-
 
 const App = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null); // Trạng thái theo dõi thông tin người dùng
 
+  // Kiểm tra trạng thái đăng nhập mỗi khi ứng dụng được tải
   useEffect(() => {
-    // Kiểm tra xem người dùng đã đăng nhập chưa
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        setUser(user); // Lưu thông tin người dùng vào state
-        // Gửi email thông báo khi có người đăng nhập
-        await sendLoginNotification(user.email);
+    const unsubscribe = auth.onAuthStateChanged(async (loggedInUser) => {
+      if (loggedInUser) {
+        setUser(loggedInUser); // Lưu thông tin người dùng vào state
+        console.log("Logged in user:", loggedInUser);
+        
+        // Gửi thông báo đăng nhập qua email
+        await sendLoginNotification(loggedInUser.email);
       }
     });
-    return unsubscribe; // Dọn dẹp khi component unmount
+
+    // Cleanup khi component unmount
+    return () => unsubscribe();
   }, []);
+
+  const handleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const loggedInUser = result.user;
+      setUser(loggedInUser); // Lưu thông tin người dùng vào state
+      console.log("Logged in user:", loggedInUser);
+      
+      // Gửi thông báo đăng nhập qua email
+      await sendLoginNotification(loggedInUser.email);
+    } catch (error) {
+      console.error("Error logging in:", error);
+    }
+  };
 
   return (
     <div>
-      {user ? (
-        <FormPage />
-      ) : (
+      {!user ? (
         <div>
           
+        </div>
+      ) : (
+        <div>
+          <FormPage />
         </div>
       )}
     </div>
