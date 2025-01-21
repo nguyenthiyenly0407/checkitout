@@ -5,9 +5,9 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-const corsOptions = {
-  origin: true, // Cho phép mọi nguồn gốc truy cập
-};
+const cors = require('cors')({
+    origin: ['https://nguyenthiyenly0407.github.io'], // Chỉ cho phép từ domain này
+  });
 
 // Cấu hình transporter với thông tin SMTP của Gmail
 const transporter = nodemailer.createTransport({
