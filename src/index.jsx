@@ -22,8 +22,15 @@ const transporter = nodemailer.createTransport({
 exports.sendNotification = functions.https.onRequest((req, res) => {
   // Thiết lập CORS và xử lý yêu cầu
   cors(corsOptions)(req, res, () => {
-    // Cấu hình để không lưu cache
+    // Thêm các header để ngăn cache
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+
+    // Kiểm tra xem có dữ liệu trong body không
+    if (!req.body || !req.body.email) {
+      return res.status(400).send({ error: "Email is required" });
+    }
 
     // Xử lý yêu cầu POST
     if (req.method === "POST") {
