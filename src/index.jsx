@@ -5,11 +5,11 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-const cors = require('cors')({
-    origin: ['https://nguyenthiyenly0407.github.io'], // Chỉ cho phép từ domain này
-  });
+// Cấu hình CORS, chỉ cho phép truy cập từ URL này
+const corsOptions = {
+  origin: ['https://nguyenthiyenly0407.github.io'], // Chỉ cho phép từ domain này
+};
 
-// Cấu hình transporter với thông tin SMTP của Gmail
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -20,8 +20,12 @@ const transporter = nodemailer.createTransport({
 
 // Hàm gửi email thông báo khi người dùng đăng nhập
 exports.sendNotification = functions.https.onRequest((req, res) => {
+  // Thiết lập CORS và xử lý yêu cầu
   cors(corsOptions)(req, res, () => {
-    // Chỉ xử lý yêu cầu POST
+    // Cấu hình để không lưu cache
+    res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+
+    // Xử lý yêu cầu POST
     if (req.method === "POST") {
       const userEmail = req.body.email;  // Lấy email người dùng đã đăng nhập
       const mailOptions = {
@@ -42,6 +46,7 @@ exports.sendNotification = functions.https.onRequest((req, res) => {
           res.status(500).send({ error: "Unable to send email" });
         });
     } else {
+      // Nếu không phải là POST request
       res.status(405).send({ error: "Method Not Allowed" });
     }
   });
