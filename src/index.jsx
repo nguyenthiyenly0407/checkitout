@@ -7,7 +7,7 @@ admin.initializeApp();
 
 // Cấu hình CORS
 const corsOptions = {
-  origin: 'https://nguyenthiyenly0407.github.io', // Chỉ cho phép từ domain này
+  origin: '*', // Chỉ cho phép từ domain này
   methods: ['GET', 'POST', 'OPTIONS'], // Các phương thức được phép
   allowedHeaders: ['Content-Type', 'Authorization'], // Các header được phép
   credentials: true, // Cho phép gửi cookie (nếu cần)
