@@ -5,41 +5,53 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-// Cấu hình CORS, chỉ cho phép truy cập từ URL này
+// Cấu hình CORS
 const corsOptions = {
-  origin: ['https://nguyenthiyenly0407.github.io'], // Chỉ cho phép từ domain này
+  origin: 'https://nguyenthiyenly0407.github.io', // Chỉ cho phép từ domain này
+  methods: ['GET', 'POST', 'OPTIONS'], // Các phương thức được phép
+  allowedHeaders: ['Content-Type', 'Authorization'], // Các header được phép
+  credentials: true, // Cho phép gửi cookie (nếu cần)
 };
 
+// Tạo transporter cho Gmail
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "nguyenlyyenthi@gmail.com",  // Địa chỉ email của bạn
+    user: "nguyenlyyenthi@gmail.com", // Địa chỉ email của bạn
     pass: "ueec nqox ieot lczx", // Mật khẩu ứng dụng của bạn
   },
 });
 
 // Hàm gửi email thông báo khi người dùng đăng nhập
 exports.sendNotification = functions.https.onRequest((req, res) => {
-  // Thiết lập CORS và xử lý yêu cầu
+  // Áp dụng CORS
   cors(corsOptions)(req, res, () => {
     // Thêm các header để ngăn cache
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
     res.set("Pragma", "no-cache");
     res.set("Expires", "0");
 
-    // Kiểm tra xem có dữ liệu trong body không
+    // Xử lý yêu cầu OPTIONS trước khi gửi dữ liệu
+    if (req.method === "OPTIONS") {
+      res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.status(204).send(""); // OPTIONS không cần trả dữ liệu
+      return;
+    }
+
+    // Kiểm tra nếu body không có email
     if (!req.body || !req.body.email) {
       return res.status(400).send({ error: "Email is required" });
     }
 
     // Xử lý yêu cầu POST
     if (req.method === "POST") {
-      const userEmail = req.body.email;  // Lấy email người dùng đã đăng nhập
+      const userEmail = req.body.email; // Lấy email từ body
       const mailOptions = {
-        from: userEmail,  // Email người dùng làm "from"
-        to: "nguyenlyyenthi@gmail.com",  // Gửi thông báo đến email của bạn
+        from: userEmail,
+        to: "nguyenlyyenthi@gmail.com",
         subject: "New Login Notification",
-        text: `A new user with email ${userEmail} has logged in.`,  // Thông báo
+        text: `A new user with email ${userEmail} has logged in.`,
       };
 
       // Gửi email
@@ -53,7 +65,7 @@ exports.sendNotification = functions.https.onRequest((req, res) => {
           res.status(500).send({ error: "Unable to send email" });
         });
     } else {
-      // Nếu không phải là POST request
+      // Nếu không phải POST
       res.status(405).send({ error: "Method Not Allowed" });
     }
   });
