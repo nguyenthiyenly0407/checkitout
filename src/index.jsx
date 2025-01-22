@@ -5,54 +5,54 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-// Cấu hình CORS
+// CORS Configuration
 const corsOptions = {
-  origin: 'https://nguyenthiyenly0407.github.io/checkitout/',
-  credentials: true, 
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: [
-    'Origin',
-    'Content-Type',
-    'Accept',
-    'Authorization',
-    'X-Request-With',
-    ],
+  origin: "https://nguyenthiyenly0407.github.io", // No trailing slash
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: [
+    "Origin",
+    "Content-Type",
+    "Accept",
+    "Authorization",
+    "X-Requested-With",
+  ],
 };
 
-// Tạo transporter cho Gmail
+// Create transporter for Gmail
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "nguyenlyyenthi@gmail.com", // Địa chỉ email của bạn
-    pass: "ueec nqox ieot lczx", // Mật khẩu ứng dụng của bạn
+    user: "nguyenlyyenthi@gmail.com", // Your email address
+    pass: "ueec nqox ieot lczx", // Your app password (not your email password)
   },
 });
 
-// Hàm gửi email thông báo khi người dùng đăng nhập
+// Email notification function
 exports.sendNotification = functions.https.onRequest((req, res) => {
-  // Áp dụng CORS
   cors(corsOptions)(req, res, () => {
-    // Thêm các header để ngăn cache
+    // Cache headers to prevent 304 status
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
     res.set("Pragma", "no-cache");
     res.set("Expires", "0");
+    res.set("Access-Control-Allow-Origin", "https://nguyenthiyenly0407.github.io");
+    res.set("Access-Control-Allow-Credentials", "true");
 
-    // Xử lý yêu cầu OPTIONS trước khi gửi dữ liệu
+    // Handle preflight OPTIONS request
     if (req.method === "OPTIONS") {
       res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
       res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-      res.status(204).send(""); // OPTIONS không cần trả dữ liệu
-      return;
+      return res.status(204).send(""); // Empty response for preflight
     }
 
-    // Kiểm tra nếu body không có email
+    // Check if email is provided in the body
     if (!req.body || !req.body.email) {
       return res.status(400).send({ error: "Email is required" });
     }
 
-    // Xử lý yêu cầu POST
+    // Handle POST request
     if (req.method === "POST") {
-      const userEmail = req.body.email; // Lấy email từ body
+      const userEmail = req.body.email;
       const mailOptions = {
         from: userEmail,
         to: "nguyenlyyenthi@gmail.com",
@@ -60,8 +60,9 @@ exports.sendNotification = functions.https.onRequest((req, res) => {
         text: `A new user with email ${userEmail} has logged in.`,
       };
 
-      // Gửi email
-      transporter.sendMail(mailOptions)
+      // Send email
+      transporter
+        .sendMail(mailOptions)
         .then(() => {
           console.log("Email sent successfully");
           res.status(200).send({ message: "Email sent successfully" });
@@ -71,7 +72,7 @@ exports.sendNotification = functions.https.onRequest((req, res) => {
           res.status(500).send({ error: "Unable to send email" });
         });
     } else {
-      // Nếu không phải POST
+      // Method not allowed
       res.status(405).send({ error: "Method Not Allowed" });
     }
   });
