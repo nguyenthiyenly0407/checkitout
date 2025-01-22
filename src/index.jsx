@@ -5,41 +5,53 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
+// CORS Configuration
 const corsOptions = {
   origin: "https://nguyenthiyenly0407.github.io", // No trailing slash
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: [
+    "Origin",
+    "Content-Type",
+    "Accept",
+    "Authorization",
+    "X-Requested-With",
+  ],
 };
 
+// Create transporter for Gmail
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "nguyenlyyenthi@gmail.com",
-    pass: "ueec nqox ieot lczx",
+    user: "nguyenlyyenthi@gmail.com", // Your email address
+    pass: "ueec nqox ieot lczx", // Your app password (not your email password)
   },
 });
 
+// Email notification function
 exports.sendNotification = functions.https.onRequest((req, res) => {
   cors(corsOptions)(req, res, () => {
-    // Add common headers
-    res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    // Cache headers to prevent 304 status
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
     res.set("Pragma", "no-cache");
-    res.set("Expires", "0");
+    res.set("Expires", "-1");
     res.set("Access-Control-Allow-Origin", "https://nguyenthiyenly0407.github.io");
     res.set("Access-Control-Allow-Credentials", "true");
 
-    // Handle OPTIONS request
+    // Handle preflight OPTIONS request
     if (req.method === "OPTIONS") {
       res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
       res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-      return res.status(204).send("");
+      return res.status(204).send(""); // Empty response for preflight
+    }
+
+    // Check if email is provided in the body
+    if (!req.body || !req.body.email) {
+      return res.status(400).send({ error: "Email is required" });
     }
 
     // Handle POST request
     if (req.method === "POST") {
-      if (!req.body || !req.body.email) {
-        return res.status(400).send({ error: "Email is required" });
-      }
-
       const userEmail = req.body.email;
       const mailOptions = {
         from: userEmail,
@@ -48,6 +60,7 @@ exports.sendNotification = functions.https.onRequest((req, res) => {
         text: `A new user with email ${userEmail} has logged in.`,
       };
 
+      // Send email
       transporter
         .sendMail(mailOptions)
         .then(() => {
@@ -59,6 +72,7 @@ exports.sendNotification = functions.https.onRequest((req, res) => {
           res.status(500).send({ error: "Unable to send email" });
         });
     } else {
+      // Method not allowed
       res.status(405).send({ error: "Method Not Allowed" });
     }
   });
