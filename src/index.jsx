@@ -7,7 +7,7 @@ admin.initializeApp();
 
 // Cấu hình CORS
 const corsOptions = {
-  origin: '*',
+  origin: 'https://nguyenthiyenly0407.github.io/checkitout/',
   credentials: true, 
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
