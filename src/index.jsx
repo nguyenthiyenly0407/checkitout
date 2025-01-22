@@ -7,10 +7,16 @@ admin.initializeApp();
 
 // Cấu hình CORS
 const corsOptions = {
-  origin: '*', // Chỉ cho phép từ domain này
-  methods: ['GET', 'POST', 'OPTIONS'], // Các phương thức được phép
-  allowedHeaders: ['Content-Type', 'Authorization'], // Các header được phép
-  credentials: true, // Cho phép gửi cookie (nếu cần)
+  origin: '*',
+  credentials: true, 
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+    'Origin',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'X-Request-With',
+    ],
 };
 
 // Tạo transporter cho Gmail
